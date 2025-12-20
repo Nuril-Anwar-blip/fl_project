@@ -15,32 +15,69 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { Activity, BookOpen, Folder, LayoutGrid, User } from 'lucide-react';
+import { Activity, BookOpen, Folder, LayoutGrid, User, Users, Settings, FileText, Heart } from 'lucide-react';
 import AppLogo from './app-logo';
+import { useEffect, useState } from 'react';
 
-const mainNavItems: NavItem[] = [
+// --- Role-Based Navigation Config ---
+
+const adminNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard().url,
+        title: 'Dashboard (Admin)',
+        href: '/dashboard?role=admin',
         icon: LayoutGrid,
     },
     {
-        title: 'Patients',
-        href: '/patients',
-        icon: User,
+        title: 'User Management',
+        href: '/users',
+        icon: Users,
     },
     {
-        title: 'Add Patient',
-        href: '/patients/create',
-        icon: User,
+        title: 'System Settings',
+        href: '/settings/system',
+        icon: Settings,
     },
     {
-        title: 'Federated Learning',
+        title: 'Federated Monitor',
         href: '/federated/monitor',
         icon: Activity,
+    },
+];
+
+const doctorNavItems: NavItem[] = [
+    {
+        title: 'Dashboard (Doctor)',
+        href: '/dashboard?role=doctor',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Patient Records',
+        href: '/patients',
+        icon: Users,
+    },
+    {
+        title: 'Rounds',
+        href: '/federated/monitor',
+        icon: Activity,
+    },
+];
+
+const patientNavItems: NavItem[] = [
+    {
+        title: 'My Health',
+        href: '/dashboard?role=patient',
+        icon: Heart,
+    },
+    {
+        title: 'History',
+        href: '/history',
+        icon: FileText,
+    },
+    {
+        title: 'Profile',
+        href: '/profile',
+        icon: User,
     },
 ];
 
@@ -58,22 +95,41 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const [role, setRole] = useState<'admin' | 'doctor' | 'patient'>('patient');
+
+    useEffect(() => {
+        // Simple role detection from URL for demo purposes
+        const roleParam = new URLSearchParams(window.location.search).get('role')?.toLowerCase();
+        if (roleParam === 'admin' || roleParam === 'doctor' || roleParam === 'patient') {
+            setRole(roleParam);
+        }
+    }, []);
+
+    const getNavItems = () => {
+        switch (role) {
+            case 'admin': return adminNavItems;
+            case 'doctor': return doctorNavItems;
+            case 'patient': return patientNavItems;
+            default: return patientNavItems;
+        }
+    };
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard().url}>
+                            <a href={`/dashboard?role=${role}`}>
                                 <AppLogo />
-                            </Link>
+                            </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={getNavItems()} />
             </SidebarContent>
 
             <SidebarFooter>

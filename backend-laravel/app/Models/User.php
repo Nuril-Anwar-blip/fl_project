@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
-
-    protected $table = 'users';
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'nama',
+        'name',
         'email',
-        'password',
+        'phone',
+        'address',
         'role',
+        'password',
     ];
 
     protected $hidden = [
@@ -25,32 +26,32 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified' => 'datetime',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
-    // Mutator untuk bcrypt password
-    public function setPasswordAttribute($value)
+    public function patient()
     {
-        if ($value) $this->attributes['password'] = bcrypt($value);
+        return $this->hasOne(Patient::class);
     }
 
-    public function patientProfile()
+    public function doctor()
     {
-        return $this->hasOne(PatientProfile::class, 'user_id');
+        return $this->hasOne(Doctor::class);
     }
 
-    public function personalAccessTokens()
+    public function isAdmin(): bool
     {
-        return $this->hasMany(PersonalAccessToken::class, 'user_id');
+        return $this->role === 'admin';
     }
 
-    public function activityLogs()
+    public function isDoctor(): bool
     {
-        return $this->hasMany(ActivityLog::class, 'user_id');
+        return $this->role === 'doctor';
     }
 
-    public function educationArticles()
+    public function isPatient(): bool
     {
-        return $this->hasMany(EducationArticle::class, 'author_id');
+        return $this->role === 'patient';
     }
 }
